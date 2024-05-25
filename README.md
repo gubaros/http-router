@@ -30,7 +30,7 @@ The purpose of this project is to provide a simple and efficient way to handle a
 - **Understanding HTTP**: By building and running this server, users can gain a deeper understanding of how HTTP requests and responses work, and how to implement redirection logic.
 - **Performance**: The use of the `tinycdb` library for managing URL mappings allows the server to handle large datasets efficiently. CDB (Constant Database) provides fast lookups with a minimal memory footprint, making it ideal for applications requiring high performance and scalability.
 
-## Aproximacion a la logica 
+## Aproximación a la lógica 
 
 Lógica del Bucle, Manejo de Conexiones y Uso de kqueue
 `
