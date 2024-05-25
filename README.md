@@ -5,6 +5,7 @@ This project implements an HTTP redirect server using the `tinycdb` library to h
 ## Table of Contents
 
 - [Description](#description)
+- [Purpose](#purpose)
 - [Setup](#setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
@@ -20,6 +21,15 @@ This project consists of two main components:
 
 1. `create.c`: Reads URL mappings from `routes.txt` and creates a `redirects.cdb` database.
 2. `server.c`: Implements an HTTP server that reads from `redirects.cdb` to perform URL redirections.
+
+## Purpose
+
+The purpose of this project is to provide a simple and efficient way to handle a large number of HTTP URL redirects. The key motivations behind this project include:
+
+- **Simplicity**: The project aims to demonstrate how to build a basic yet functional HTTP server that performs URL redirections using minimal dependencies and straightforward code.
+- **Understanding HTTP**: By building and running this server, users can gain a deeper understanding of how HTTP requests and responses work, and how to implement redirection logic.
+- **Performance**: The use of the `tinycdb` library for managing URL mappings allows the server to handle large datasets efficiently. CDB (Constant Database) provides fast lookups with a minimal memory footprint, making it ideal for applications requiring high performance and scalability.
+
 
 ## Setup
 
