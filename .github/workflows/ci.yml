@@ -25,7 +25,6 @@ jobs:
         curl -O http://www.corpit.ru/mjt/tinycdb/tinycdb-0.78.tar.gz
         tar -xzf tinycdb-0.78.tar.gz
         cd tinycdb-0.78
-        ./configure
         make
         sudo make install
 
