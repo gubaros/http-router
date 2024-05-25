@@ -17,6 +17,7 @@ This project implements an HTTP redirect server using the `tinycdb` library to h
 ## Description
 
 This project consists of two main components:
+
 1. `create.c`: Reads URL mappings from `routes.txt` and creates a `redirects.cdb` database.
 2. `server.c`: Implements an HTTP server that reads from `redirects.cdb` to perform URL redirections.
 
@@ -28,22 +29,22 @@ This project consists of two main components:
 
 ### Installation
 
-#### Installing `tinycdb`
+## Installing `tinycdb`
 
 You can install `tinycdb` from source as follows:
 
 1. Download and extract the source code:
-   ```sh
-   curl -O http://www.corpit.ru/mjt/tinycdb/tinycdb-0.78.tar.gz
-   tar -xzf tinycdb-0.78.tar.gz
-   cd tinycdb-0.78
+```sh
+curl -O http://www.corpit.ru/mjt/tinycdb/tinycdb-0.78.tar.gz
+tar -xzf tinycdb-0.78.tar.gz
+cd tinycdb-0.78
 ```
+
 2. Configure and compile:
 ```sh
 CFLAGS="-arch arm64" ./configure
 make
 sudo make install
-
 gcc -o create_cdb create.c -lcdb
 gcc -o http_server server.c -lcdb
 ```
@@ -58,6 +59,7 @@ Create the routes.txt file with your URL mappings. Example txt:
 example,https://www.example.com
 google,https://www.google.com
 ```
+
 Run the create_cdb program to generate the redirects.cdb file:
 
 ```sh
