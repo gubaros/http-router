@@ -1,0 +1,50 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up dependencies
+      run: sudo apt-get update && sudo apt-get install -y gcc make curl
+
+    - name: Install tinycdb
+      run: |
+        curl -O http://www.corpit.ru/mjt/tinycdb/tinycdb-0.78.tar.gz
+        tar -xzf tinycdb-0.78.tar.gz
+        cd tinycdb-0.78
+        ./configure
+        make
+        sudo make install
+
+    - name: Compile create_cdb
+      run: gcc -o create_cdb create.c -lcdb
+
+    - name: Compile http_server
+      run: gcc -o http_server server.c -lcdb
+
+    - name: Generate CDB
+      run: ./create_cdb redirects.cdb routes.txt
+
+    - name: Run http_server
+      run: |
+        sudo apt-get install -y netcat
+        ./http_server &
+        sleep 2
+        echo -e "GET /example HTTP/1.1\nHost: localhost\n\n" | nc localhost 8080 > output.txt
+        cat output.txt
+
+    - name: Verify redirection
+      run: grep "302 Found" output.txt
