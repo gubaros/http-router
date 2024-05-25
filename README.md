@@ -1,4 +1,5 @@
-# HTTP Redirect Server with CDB
+# Yet Another Tiny HTTP Router
+# HTTP Redirect Server with CDB
 
 This project implements an HTTP redirect server using the `tinycdb` library to handle a large number of URL redirects efficiently. The server reads URL mappings from a `routes.txt` file, generates a `redirects.cdb` database, and uses it to perform redirections.
 
