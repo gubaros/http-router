@@ -47,38 +47,38 @@ sudo make install
 gcc -o create_cdb create.c -lcdb
 gcc -o http_server server.c -lcdb
 ```
+
 ## Usage
 
-Generating the CDB Database
+### Generating the CDB Database
 
- Create the routes.txt file with your URL mappings. Example txt:
+Create the routes.txt file with your URL mappings. Example txt:
 
+```sh
 example,https://www.example.com
 google,https://www.google.com
-
+```
 Run the create_cdb program to generate the redirects.cdb file:
 
-sh
-
+```sh
     ./create_cdb redirects.cdb routes.txt
-
-Running the Server
+```
+### Running the Server
 
 Start the HTTP redirect server:
 
-sh
-
+```sh
 ./http_server
+```
 
-Testing the Server
+### Testing the Server
 
 To test the redirections, you can use curl or a web browser.
 Using curl
 
-sh
-
+```sh
 curl -I http://localhost:8080/example
-
+```
 Expected response:
 
 http
