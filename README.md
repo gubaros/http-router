@@ -35,6 +35,7 @@ The purpose of this project is to provide a simple and efficient way to handle a
 Lógica del Bucle, Manejo de Conexiones y Uso de kqueue
 `
 El servidor HTTP está diseñado para manejar un alto número de conexiones concurrentes de manera eficiente. Para lograr esto, se utiliza kqueue, una interfaz de notificación de eventos proporcionada por los sistemas operativos BSD y macOS. kqueue permite monitorear múltiples descriptores de archivo para diversas condiciones de eventos, como lectura, escritura y errores, de una manera escalable y eficiente.
+
 Lógica del Bucle Principal
 
 El servidor crea un socket maestro que escucha en un puerto especificado (8080 por defecto). Este socket se configura como no bloqueante para permitir operaciones de E/S asíncronas. Se crea una instancia de kqueue y se añade el socket maestro a la lista de eventos a monitorear.
