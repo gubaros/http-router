@@ -49,9 +49,9 @@ gcc -o create create.c -lcdb
 gcc -o server server.c -lcdb
 ```
 
-## Usage
+### Usage
 
-### Generating the CDB Database
+## Generating the CDB Database
 
 Create the routes.txt file with your URL mappings. Example txt:
 
