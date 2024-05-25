@@ -1,0 +1,3 @@
+example,https://www.example.com
+google,https://www.google.com
+mach,https://www.somosmach.com
