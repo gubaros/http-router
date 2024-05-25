@@ -1,5 +1,6 @@
 # Prerequisites
 *.d
+server
 
 # Object files
 *.o
@@ -53,4 +54,3 @@ dkms.conf
 
 # CDB files
 *.cdb
-*.txt

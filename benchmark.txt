@@ -1,0 +1,48 @@
+Análisis Comparativo
+
+wrk -t10 -c5000 -d5s --latency  http://localhost:8080/example   
+
+Servidor en Node.js
+
+    Solicitudes por segundo: 49,344.95
+    Latencia promedio: 4.97 ms
+    Errores de socket: 4760 conectando, 100 leyendo, 0 escribiendo
+
+wrk -t10 -c5000 -d5s --latency  http://localhost:3000/example
+Running 5s test @ http://localhost:3000/example
+  10 threads and 5000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     4.97ms    8.76ms 516.17ms   99.88%
+    Req/Sec     4.98k     2.04k    9.49k    70.40%
+  Latency Distribution
+     50%    4.68ms
+     75%    4.87ms
+     90%    5.13ms
+     99%    5.76ms
+  248070 requests in 5.03s, 37.85MB read
+  Socket errors: connect 4760, read 100, write 0, timeout 0
+Requests/sec:  49344.95
+Transfer/sec:      7.53MB
+
+Servidor en C
+
+    Solicitudes por segundo: 57,773.90
+    Latencia promedio: 4.13 ms
+    Errores de socket: 4760 conectando, 135 leyendo, 0 escribiendo
+
+ wrk -t10 -c5000 -d5s --latency  http://localhost:8080/example   
+Running 5s test @ http://localhost:8080/example
+  10 threads and 5000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     4.13ms  353.29us   9.57ms   94.05%
+    Req/Sec     5.83k     2.62k   12.13k    70.20%
+  Latency Distribution
+     50%    4.08ms
+     75%    4.19ms
+     90%    4.34ms
+     99%    4.93ms
+  290290 requests in 5.02s, 19.93MB read
+  Socket errors: connect 4760, read 135, write 0, timeout 0
+Requests/sec:  57773.90
+Transfer/sec:      3.97MB
+

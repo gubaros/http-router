@@ -4,10 +4,15 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <sys/event.h>
+#include <sys/socket.h>
+#include <errno.h>
 #include <cdb.h>
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
+#define MAX_EVENTS 1024
+#define MAX_CLIENTS 10000
 
 char *find_redirect(const char *key) {
     struct cdb cdb;
@@ -60,57 +65,115 @@ void route(int client_socket, const char *path) {
     }
 }
 
-int main() {
-    int server_fd, new_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-    char buffer[BUFFER_SIZE] = {0};
+int set_nonblocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) return -1;
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
 
-    // Crear el socket
+int main() {
+    int server_fd, new_socket, kq, nev;
+    struct sockaddr_in address;
+    struct kevent change_event, event[MAX_EVENTS];
+    socklen_t addrlen;
+    char buffer[BUFFER_SIZE];
+
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
-    // Configurar la dirección y puerto del servidor
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
-    // Adjuntar el socket a la dirección y puerto
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("bind failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    // Escuchar en el socket
-    if (listen(server_fd, 3) < 0) {
+    if (listen(server_fd, 100) < 0) {  // Aumentar el backlog para manejar más conexiones entrantes
         perror("listen");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
+    if (set_nonblocking(server_fd) == -1) {
+        perror("fcntl");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    if ((kq = kqueue()) == -1) {
+        perror("kqueue");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    EV_SET(&change_event, server_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    kevent(kq, &change_event, 1, NULL, 0, NULL);
+
     printf("Server listening on port %d\n", PORT);
 
     while (1) {
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
-            perror("accept");
+        nev = kevent(kq, NULL, 0, event, MAX_EVENTS, NULL);
+        if (nev < 0) {
+            perror("kevent error");
             close(server_fd);
             exit(EXIT_FAILURE);
         }
 
-        read(new_socket, buffer, BUFFER_SIZE);
-        printf("%s\n", buffer);
+        for (int i = 0; i < nev; i++) {
+            if (event[i].flags & EV_ERROR) {
+                fprintf(stderr, "EV_ERROR: %s\n", strerror(event[i].data));
+                close(server_fd);
+                exit(EXIT_FAILURE);
+            }
 
-        // Parsear la primera línea del request
-        char method[16], path[256], version[16];
-        sscanf(buffer, "%s %s %s", method, path, version);
+            if (event[i].ident == server_fd) {
+                addrlen = sizeof(address);
+                if ((new_socket = accept(server_fd, (struct sockaddr *)&address, &addrlen)) < 0) {
+                    if (errno != EWOULDBLOCK && errno != EAGAIN) {
+                        perror("accept");
+                    }
+                    continue;
+                }
 
-        // Enrutar el request
-        route(new_socket, path);
+                printf("New connection, socket fd is %d, ip is : %s, port: %d\n",
+                       new_socket, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
-        close(new_socket);
+                if (set_nonblocking(new_socket) == -1) {
+                    perror("fcntl");
+                    close(new_socket);
+                    continue;
+                }
+
+                EV_SET(&change_event, new_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+                kevent(kq, &change_event, 1, NULL, 0, NULL);
+            } else {
+                int sd = event[i].ident;
+                int valread = read(sd, buffer, BUFFER_SIZE);
+                if (valread == 0) {
+                    getpeername(sd, (struct sockaddr *)&address, &addrlen);
+                    printf("Host disconnected, ip %s, port %d\n",
+                           inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+
+                    close(sd);
+                } else if (valread > 0) {
+                    buffer[valread] = '\0';
+                    printf("%s\n", buffer);
+
+                    char method[16], path[256], version[16];
+                    sscanf(buffer, "%s %s %s", method, path, version);
+
+                    route(sd, path);
+
+                    EV_SET(&change_event, sd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+                    kevent(kq, &change_event, 1, NULL, 0, NULL);
+                }
+            }
+        }
     }
 
     close(server_fd);
