@@ -48,10 +48,9 @@ sudo make install
 gcc -o create create.c -lcdb
 gcc -o server server.c -lcdb
 ```
-
 ### Usage
 
-## Generating the CDB Database
+## Generating the CDB Database
 
 Create the routes.txt file with your URL mappings. Example txt:
 
@@ -65,7 +64,7 @@ Run the create program to generate the redirects.cdb file:
 ```sh
 ./create redirects.cdb routes.txt
 ```
-### Running the Server
+### Running the Server
 
 Start the HTTP redirect server:
 
@@ -73,7 +72,7 @@ Start the HTTP redirect server:
 ./server
 ```
 
-### Testing the Server
+### Testing the Server
 
 To test the redirections, you can use curl or a web browser.
 Using curl
@@ -94,6 +93,7 @@ Using a Web Browser
 
 Navigate to http://localhost:8080/example in your web browser. You should be redirected to https://www.example.com.
 
-## License
+## License
 
 This project is licensed under the terms of the GNU General Public License v3.0. See the LICENSE file for details.
+
