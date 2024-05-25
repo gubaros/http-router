@@ -45,8 +45,8 @@ cd tinycdb-0.78
 CFLAGS="-arch arm64" ./configure
 make
 sudo make install
-gcc -o create_cdb create.c -lcdb
-gcc -o http_server server.c -lcdb
+gcc -o create create.c -lcdb
+gcc -o server server.c -lcdb
 ```
 
 ## Usage
@@ -60,17 +60,17 @@ example,https://www.example.com
 google,https://www.google.com
 ```
 
-Run the create_cdb program to generate the redirects.cdb file:
+Run the create program to generate the redirects.cdb file:
 
 ```sh
-    ./create_cdb redirects.cdb routes.txt
+./create redirects.cdb routes.txt
 ```
 ### Running the Server
 
 Start the HTTP redirect server:
 
 ```sh
-./http_server
+./server
 ```
 
 ### Testing the Server
@@ -81,14 +81,15 @@ Using curl
 ```sh
 curl -I http://localhost:8080/example
 ```
-Expected response:
 
+Expected response:
+```sh
 http
 
 HTTP/1.1 302 Found
 Location: https://www.example.com
 Content-Length: 0
-
+```
 Using a Web Browser
 
 Navigate to http://localhost:8080/example in your web browser. You should be redirected to https://www.example.com.
