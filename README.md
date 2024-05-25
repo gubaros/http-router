@@ -46,14 +46,12 @@ sudo make install
 
 gcc -o create_cdb create.c -lcdb
 gcc -o http_server server.c -lcdb
-
+```
 ## Usage
 
 Generating the CDB Database
 
-    Create the routes.txt file with your URL mappings. Example:
-
-    txt
+ Create the routes.txt file with your URL mappings. Example txt:
 
 example,https://www.example.com
 google,https://www.google.com
@@ -92,11 +90,7 @@ Content-Length: 0
 Using a Web Browser
 
 Navigate to http://localhost:8080/example in your web browser. You should be redirected to https://www.example.com.
-License
+
+## License
 
 This project is licensed under the terms of the GNU General Public License v3.0. See the LICENSE file for details.
-
-css
-
-
-Este `README.md` actualizado refleja correctamente la licencia GNU GPL 3.0 y proporciona una guía completa para configurar, compilar, y usar el proyecto, incluyendo instrucciones detalladas para la instalación de dependencias, generación de la base de datos CDB, y ejecución del servidor HTTP.
