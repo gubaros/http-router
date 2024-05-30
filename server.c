@@ -8,9 +8,10 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <cdb.h>
+#include "plugins/plugin.h"
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 8192
 #define MAX_EVENTS 1024
 #define MAX_CLIENTS 10000
 
@@ -43,26 +44,24 @@ char *find_redirect(const char *key) {
     return result;
 }
 
-void handle_redirect(int client_socket, const char *url) {
-    char response[BUFFER_SIZE];
-    snprintf(response, sizeof(response),
-             "HTTP/1.1 302 Found\nLocation: %s\nContent-Length: 0\n\n", url);
-    write(client_socket, response, strlen(response));
-}
+void handle_request(int client_socket, const char *method, const char *path, const char *auth_header) {
+    RequestData request_data = {method, path, auth_header, client_socket, NULL};
 
-void handle_not_found(int client_socket) {
-    char *response = "HTTP/1.1 404 Not Found\nContent-Type: text/plain\nContent-Length: 9\n\nNot Found";
-    write(client_socket, response, strlen(response));
-}
+    execute_plugins(PRE_ROUTING, &request_data);
 
-void route(int client_socket, const char *path) {
-    char *url = find_redirect(path + 1); // Eliminar el '/' inicial
-    if (url) {
-        handle_redirect(client_socket, url);
-        free(url);
+    char *redirect_url = find_redirect(path + 1);
+    if (redirect_url) {
+        char response[BUFFER_SIZE];
+        snprintf(response, sizeof(response), "HTTP/1.1 302 Found\nLocation: %s\nContent-Length: 0\n\n", redirect_url);
+        send(client_socket, response, strlen(response), 0);
+        free(redirect_url);
     } else {
-        handle_not_found(client_socket);
+        char *response = "HTTP/1.1 404 Not Found\nContent-Type: text/plain\nContent-Length: 9\n\nNot Found";
+        send(client_socket, response, strlen(response), 0);
     }
+
+    execute_plugins(POST_ROUTING, &request_data);
+    close(client_socket);  // Cerrar la conexión después de manejar la solicitud
 }
 
 int set_nonblocking(int fd) {
@@ -78,39 +77,46 @@ int main() {
     socklen_t addrlen;
     char buffer[BUFFER_SIZE];
 
+    // Crear el socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
+    // Configurar la dirección y puerto del servidor
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
+    // Adjuntar el socket a la dirección y puerto
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("bind failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    if (listen(server_fd, 100) < 0) {  // Aumentar el backlog para manejar más conexiones entrantes
+    // Escuchar en el socket
+    if (listen(server_fd, 1000) < 0) {  // Aumentar el backlog para manejar más conexiones entrantes
         perror("listen");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
+    // Configurar el socket del servidor como no bloqueante
     if (set_nonblocking(server_fd) == -1) {
         perror("fcntl");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
+    // Crear el kqueue
     if ((kq = kqueue()) == -1) {
         perror("kqueue");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
+    // Inicializar el evento para el socket maestro
     EV_SET(&change_event, server_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
     kevent(kq, &change_event, 1, NULL, 0, NULL);
 
@@ -167,7 +173,7 @@ int main() {
                     char method[16], path[256], version[16];
                     sscanf(buffer, "%s %s %s", method, path, version);
 
-                    route(sd, path);
+                    handle_request(sd, method, path, NULL);
 
                     EV_SET(&change_event, sd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
                     kevent(kq, &change_event, 1, NULL, 0, NULL);

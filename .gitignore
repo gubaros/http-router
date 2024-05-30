@@ -1,6 +1,7 @@
 # Prerequisites
 *.d
 server
+create 
 
 # Object files
 *.o
