@@ -154,7 +154,9 @@ The HTTP server is designed to handle a high number of concurrent connections ef
 
 Linux: Uses epoll, which is a scalable I/O event notification mechanism.
 BSD/macOS: Uses kqueue, which provides similar functionality for these platforms.
+
 Implementation Details
+
 Epoll (Linux)
 In Linux, epoll is used to monitor multiple file descriptors to see if I/O is possible on any of them. It's designed to be more efficient than traditional polling methods like select and poll.
 
