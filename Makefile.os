@@ -1,13 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -O2 -march=native -flto
-LDFLAGS = -lcdb
-
-# Variables de entorno para las rutas de zlog
-ZLOG_INCLUDE_PATH ?= /usr/local/include
-ZLOG_LIB_PATH ?= /usr/local/lib
-
-CFLAGS += -I$(ZLOG_INCLUDE_PATH)
-LDFLAGS += -L$(ZLOG_LIB_PATH) -lzlog
+CFLAGS = -Wall -O2 -march=native -flto -I/opt/homebrew/Cellar/zlog/1.2.17/include
+LDFLAGS = -L/opt/homebrew/Cellar/zlog/1.2.17/lib -lcdb -lzlog
 
 PLUGIN_DIR = plugins
 UTILS_DIR = utils

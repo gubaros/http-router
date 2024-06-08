@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up dependencies
-      run: sudo apt-get update && sudo apt-get install -y gcc make curl netcat
+      run: sudo apt-get update && sudo apt-get install -y gcc make curl
 
     - name: Install tinycdb
       run: |
@@ -28,21 +28,31 @@ jobs:
         make
         sudo make install
 
-    - name: Create config file
+    - name: Install zlog
       run: |
-        echo "SERVER_PORT=8080" > config.txt
+        curl -LO https://github.com/HardySimpson/zlog/archive/refs/tags/1.2.17.tar.gz
+        tar -xzf 1.2.17.tar.gz
+        cd zlog-1.2.17
+        make
+        sudo make install
 
-    - name: Compile create
+    - name: Set environment variables
+      run: |
+        echo "ZLOG_INCLUDE_PATH=/usr/local/include" >> $GITHUB_ENV
+        echo "ZLOG_LIB_PATH=/usr/local/lib" >> $GITHUB_ENV
+
+    - name: Compile create_cdb
       run: make create
 
     - name: Compile http_server
-      run: make
+      run: make http_server
 
     - name: Generate CDB
       run: ./create redirects.cdb routes.txt
 
     - name: Run http_server
       run: |
+        sudo apt-get install -y netcat
         ./http_server &
         sleep 2
         echo -e "GET /example HTTP/1.1\nHost: localhost\n\n" | nc localhost 8080 > output.txt
