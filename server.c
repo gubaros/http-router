@@ -116,7 +116,7 @@ void cleanup(int server_fd, int loop_fd) {
 int main() {
     int server_fd = -1, new_socket, loop_fd = -1, nev;
     struct sockaddr_in address;
-    event_t change_event, event[MAX_EVENTS];
+    event_t events[MAX_EVENTS];
     socklen_t addrlen;
     char buffer[BUFFER_SIZE];
 
@@ -182,7 +182,7 @@ int main() {
     log_message(LOG_INFO, "Event loop started");
 
     while (1) {
-        nev = wait_for_events(loop_fd, event, MAX_EVENTS);
+        nev = wait_for_events(loop_fd, events, MAX_EVENTS);
         if (nev < 0) {
             log_message(LOG_ERR, "Event loop wait error: %s", strerror(errno));
             cleanup(server_fd, loop_fd);
@@ -190,13 +190,23 @@ int main() {
         }
 
         for (int i = 0; i < nev; i++) {
-            if (event[i].flags & EV_ERROR) {
-                log_message(LOG_ERR, "Event error: %s", strerror(event[i].data));
+#ifdef __linux__
+            if (events[i].events & EPOLLERR) {
+                log_message(LOG_ERR, "Event error: %s", strerror(errno));
                 cleanup(server_fd, loop_fd);
                 exit(EXIT_FAILURE);
             }
 
-            if (event[i].ident == server_fd) {
+            if (events[i].data.fd == server_fd) {
+#else
+            if (events[i].flags & EV_ERROR) {
+                log_message(LOG_ERR, "Event error: %s", strerror(events[i].data));
+                cleanup(server_fd, loop_fd);
+                exit(EXIT_FAILURE);
+            }
+
+            if (events[i].ident == server_fd) {
+#endif
                 addrlen = sizeof(address);
                 if ((new_socket = accept(server_fd, (struct sockaddr *)&address, &addrlen)) < 0) {
                     if (errno != EWOULDBLOCK && errno != EAGAIN) {
@@ -216,7 +226,11 @@ int main() {
 
                 add_to_event_loop(loop_fd, new_socket);
             } else {
-                int sd = event[i].ident;
+#ifdef __linux__
+                int sd = events[i].data.fd;
+#else
+                int sd = events[i].ident;
+#endif
                 int valread = read(sd, buffer, BUFFER_SIZE);
                 if (valread == 0) {
                     getpeername(sd, (struct sockaddr *)&address, &addrlen);
