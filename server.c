@@ -15,6 +15,7 @@
 #include "server.h"
 #include "plugins/plugin.h"
 #include "platform.h"
+#include "utils/logs.h" // Incluir el encabezado de logs
 
 #define MAX_EVENTS 1024
 
@@ -22,7 +23,7 @@ char *find_redirect(const char *key) {
     struct cdb cdb;
     int fd = open("redirects.cdb", O_RDONLY);
     if (fd < 0) {
-        perror("open");
+        log_error("open redirects.cdb failed: %s", strerror(errno));
         return NULL;
     }
 
@@ -37,7 +38,7 @@ char *find_redirect(const char *key) {
         vlen = cdb_datalen(&cdb);
         value = malloc(vlen + 1);
         if (!value) {
-            perror("malloc");
+            log_error("malloc failed: %s", strerror(errno));
             cdb_free(&cdb);
             close(fd);
             return NULL;
@@ -63,10 +64,12 @@ void handle_request(int client_socket, const char *method, const char *path, con
         char response[BUFFER_SIZE];
         snprintf(response, sizeof(response), "HTTP/1.1 302 Found\nLocation: %s\nContent-Length: 0\n\n", redirect_url);
         send(client_socket, response, strlen(response), 0);
+        log_info("Redirected %s to %s", path, redirect_url);
         free(redirect_url);
     } else {
         const char *response = "HTTP/1.1 404 Not Found\nContent-Type: text/plain\nContent-Length: 9\n\nNot Found";
         send(client_socket, response, strlen(response), 0);
+        log_warning("Path not found: %s", path);
     }
 
     execute_plugins(POST_ROUTING, &request_data);
@@ -82,7 +85,7 @@ int set_nonblocking(int fd) {
 int read_port_from_config(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror("fopen");
+        log_error("fopen %s failed: %s", filename, strerror(errno));
         return -1;
     }
 
@@ -110,59 +113,75 @@ int main() {
     socklen_t addrlen;
     char buffer[BUFFER_SIZE];
 
-    // Crear el socket
+    init_logs();
+
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("socket failed");
+        log_error("Socket creation failed: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    // Configurar la dirección y puerto del servidor
+    log_info("Socket created successfully");
+
+    int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+        log_error("setsockopt SO_REUSEADDR failed: %s", strerror(errno));
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+#ifdef __linux__
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt))) {
+        log_error("setsockopt SO_REUSEPORT failed: %s", strerror(errno));
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+#endif
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(read_port_from_config("config.txt"));
 
-    // Adjuntar el socket a la dirección y puerto
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("bind failed");
+        log_error("Bind failed: %s", strerror(errno));
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    // Escuchar en el socket
+    log_info("Socket bound to port %d", ntohs(address.sin_port));
+
     if (listen(server_fd, 1000) < 0) {
-        perror("listen");
+        log_error("Listen failed: %s", strerror(errno));
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    // Configurar el socket del servidor como no bloqueante
+    log_info("Server listening on port %d", ntohs(address.sin_port));
+
     if (set_nonblocking(server_fd) == -1) {
-        perror("fcntl");
+        log_error("fcntl failed: %s", strerror(errno));
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    // Crear el bucle de eventos
     if ((loop_fd = create_event_loop()) == -1) {
-        perror("create_event_loop");
+        log_error("create_event_loop failed: %s", strerror(errno));
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    // Agregar el socket del servidor al bucle de eventos
     if (add_to_event_loop(loop_fd, server_fd) == -1) {
-        perror("add_to_event_loop");
+        log_error("add_to_event_loop failed: %s", strerror(errno));
         close(server_fd);
         close(loop_fd);
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on port %d\n", ntohs(address.sin_port));
+    log_info("Event loop started");
 
     while (1) {
         nev = wait_for_events(loop_fd, events, MAX_EVENTS);
         if (nev < 0) {
-            perror("wait_for_events");
+            log_error("wait_for_events failed: %s", strerror(errno));
             close(server_fd);
             close(loop_fd);
             exit(EXIT_FAILURE);

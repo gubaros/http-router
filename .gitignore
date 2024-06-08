@@ -2,6 +2,7 @@
 *.d
 http_server
 create 
+my_log.txt
 
 # Object files
 *.o
