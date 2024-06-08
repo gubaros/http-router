@@ -1,6 +1,6 @@
 # YATHR - Yet Another Tiny HTTP Router
 
-This project implements an HTTP redirect server using the `tinycdb` library to handle a large number of URL redirects efficiently. The server reads URL mappings from a `routes.txt` file, generates a `redirects.cdb` database, and uses it to perform redirections. 
+This project implements an HTTP redirect server using the `tinycdb` library to handle a large number of URL redirects efficiently. The server reads URL mappings from a `routes.txt` file, generates a `redirects.cdb` database, and uses it to perform redirections.
 
 ## Table of Contents
 
@@ -30,7 +30,7 @@ The purpose of this project is to provide a simple and efficient way to handle a
 - **Understanding HTTP**: By building and running this server, users can gain a deeper understanding of how HTTP requests and responses work, and how to implement redirection logic.
 - **Performance**: The use of the `tinycdb` library for managing URL mappings allows the server to handle large datasets efficiently. CDB (Constant Database) provides fast lookups with a minimal memory footprint, making it ideal for applications requiring high performance and scalability.
 
-## Aproximación a la lógica 
+## Aproximación a la lógica
 
 Lógica del Bucle, Manejo de Conexiones y Uso de kqueue
 `
@@ -67,6 +67,7 @@ Ventajas de kqueue:
 
 En resumen, la combinación de kqueue y E/S no bloqueante permite al servidor HTTP manejar un alto volumen de tráfico con baja latencia y alta eficiencia, lo que es fundamental para aplicaciones web modernas y servicios que requieren un rendimiento robusto y escalable.
 `
+
 ## Setup
 
 ### Dependencies
@@ -80,6 +81,7 @@ En resumen, la combinación de kqueue y E/S no bloqueante permite al servidor HT
 You can install `tinycdb` from source as follows:
 
 1. Download and extract the source code:
+
 ```sh
 curl -O http://www.corpit.ru/mjt/tinycdb/tinycdb-0.78.tar.gz
 tar -xzf tinycdb-0.78.tar.gz
@@ -87,6 +89,7 @@ cd tinycdb-0.78
 ```
 
 2. Configure and compile:
+
 ```sh
 CFLAGS="-arch arm64" ./configure
 make
@@ -94,6 +97,7 @@ sudo make install
 gcc -o create create.c -lcdb
 gcc -o server server.c -lcdb
 ```
+
 ### Usage
 
 ## Generating the CDB Database
@@ -110,6 +114,7 @@ Run the create program to generate the redirects.cdb file:
 ```sh
 ./create redirects.cdb routes.txt
 ```
+
 ### Running the Server
 
 Start the HTTP redirect server:
@@ -128,6 +133,7 @@ curl -I http://localhost:8080/example
 ```
 
 Expected response:
+
 ```sh
 http
 
@@ -135,9 +141,37 @@ HTTP/1.1 302 Found
 Location: https://www.example.com
 Content-Length: 0
 ```
+
 Using a Web Browser
 
 Navigate to http://localhost:8080/example in your web browser. You should be redirected to https://www.example.com.
+
+### Epoll and Kqueue for Portability
+
+Background
+
+The HTTP server is designed to handle a high number of concurrent connections efficiently. To achieve this, it uses different event notification interfaces based on the operating system:
+
+Linux: Uses epoll, which is a scalable I/O event notification mechanism.
+BSD/macOS: Uses kqueue, which provides similar functionality for these platforms.
+Implementation Details
+Epoll (Linux)
+In Linux, epoll is used to monitor multiple file descriptors to see if I/O is possible on any of them. It's designed to be more efficient than traditional polling methods like select and poll.
+
+Key Functions:
+
+epoll_create1(): Creates an epoll instance.
+epoll_ctl(): Controls the file descriptors that will be monitored by an epoll instance.
+epoll_wait(): Waits for events on the file descriptors monitored by the epoll instance.
+Kqueue (BSD/macOS)
+For BSD and macOS, kqueue provides an efficient way to monitor multiple file descriptors.
+
+Key Functions:
+
+kqueue(): Creates a new kernel event queue.
+kevent(): Registers events with the queue and waits for events.
+Portability
+The server is designed to be portable between Linux and BSD/macOS by abstracting the event handling logic into separate functions. Depending on the operating system, the appropriate mechanism (epoll or kqueue) is used.
 
 ## License
 
