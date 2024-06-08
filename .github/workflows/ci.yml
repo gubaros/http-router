@@ -40,6 +40,7 @@ jobs:
       run: |
         echo "ZLOG_INCLUDE_PATH=/usr/local/include" >> $GITHUB_ENV
         echo "ZLOG_LIB_PATH=/usr/local/lib" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=/usr/local/lib" >> $GITHUB_ENV
 
     - name: Compile create_cdb
       run: make create
@@ -51,6 +52,8 @@ jobs:
       run: ./create redirects.cdb routes.txt
 
     - name: Run http_server
+      env:
+        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         sudo apt-get install -y netcat
         ./http_server &
