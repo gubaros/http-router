@@ -28,14 +28,14 @@ jobs:
         make
         sudo make install
 
-    - name: Compile create_cdb
-      run: gcc -o create_cdb create.c -lcdb
+    - name: Compile create
+      run: make create
 
     - name: Compile http_server
-      run: gcc -o http_server server.c -lcdb
+      run: make
 
     - name: Generate CDB
-      run: ./create_cdb redirects.cdb routes.txt
+      run: ./create redirects.cdb routes.txt
 
     - name: Run http_server
       run: |
@@ -47,3 +47,4 @@ jobs:
 
     - name: Verify redirection
       run: grep "302 Found" output.txt
+

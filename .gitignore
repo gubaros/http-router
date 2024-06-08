@@ -1,6 +1,6 @@
 # Prerequisites
 *.d
-server
+http_server
 create 
 
 # Object files
