@@ -33,6 +33,7 @@ typedef struct epoll_event event_t;
         epoll_ctl(loop_fd, EPOLL_CTL_ADD, fd, &event); \
     }
 #define wait_for_events(loop_fd, events, max_events) epoll_wait(loop_fd, events, max_events, -1)
+#define get_event_fd(event) (event.data.fd)
 #else
 typedef struct kevent event_t;
 #define create_event_loop() kqueue()
@@ -43,6 +44,7 @@ typedef struct kevent event_t;
         kevent(loop_fd, &event, 1, NULL, 0, NULL); \
     }
 #define wait_for_events(loop_fd, events, max_events) kevent(loop_fd, NULL, 0, events, max_events, NULL)
+#define get_event_fd(event) (event.ident)
 #endif
 
 char *find_redirect(const char *key) {
@@ -226,11 +228,7 @@ int main() {
 
                 add_to_event_loop(loop_fd, new_socket);
             } else {
-#ifdef __linux__
-                int sd = events[i].data.fd;
-#else
-                int sd = events[i].ident;
-#endif
+                int sd = get_event_fd(events[i]);
                 int valread = read(sd, buffer, BUFFER_SIZE);
                 if (valread == 0) {
                     getpeername(sd, (struct sockaddr *)&address, &addrlen);
