@@ -1,3 +1,9 @@
+/*
+ * Autor: Guido Barosio
+ * Email: guido@bravo47.com
+ * Fecha: 2024-06-08
+ */
+
 #include "plugin.h"
 #include <stdio.h>
 #include <string.h>
@@ -47,4 +53,3 @@ void execute_plugins(PluginType type, RequestData *request_data) {
         pthread_join(threads[i], NULL);
     }
 }
-

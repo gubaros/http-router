@@ -1,3 +1,9 @@
+/*
+ * Autor: Guido Barosio
+ * Email: guido@bravo47.com
+ * Fecha: 2024-06-08
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -196,4 +202,3 @@ int main() {
     close(loop_fd);
     return 0;
 }
-

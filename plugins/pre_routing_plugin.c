@@ -1,3 +1,9 @@
+/*
+ * Autor: Guido Barosio
+ * Email: guido@bravo47.com
+ * Fecha: 2024-06-08
+ */
+
 #include <stdio.h>
 #include "plugin.h"
 
@@ -11,4 +17,3 @@ __attribute__((constructor))
 void register_pre_routing_plugin() {
     register_plugin("PreRoutingPlugin", PRE_ROUTING, pre_routing_logic);
 }
-

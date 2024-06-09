@@ -1,3 +1,9 @@
+/*
+ * Autor: Guido Barosio
+ * Email: guido@bravo47.com
+ * Fecha: 2024-06-08
+ */
+
 #include "platform.h"
 #include "server.h"
 #include <stdio.h>
@@ -128,4 +134,3 @@ void handle_event(int loop_fd, void *event, int server_fd, char *buffer, size_t 
 }
 
 #endif
-

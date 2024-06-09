@@ -1,3 +1,9 @@
+/*
+ * Autor: Guido Barosio
+ * Email: guido@bravo47.com
+ * Fecha: 2024-06-08
+ */
+
 #include "logs.h"
 #include <stdio.h>
 #include <stdarg.h>
@@ -30,4 +36,3 @@ void log_warning(const char *format, ...) {
     vzlog_warn(zlog_get_category("my_cat"), format, args);
     va_end(args);
 }
-

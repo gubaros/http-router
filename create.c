@@ -1,3 +1,9 @@
+/*
+ * Autor: Guido Barosio
+ * Email: guido@bravo47.com
+ * Fecha: 2024-06-08
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,4 +52,3 @@ int main(int argc, char *argv[]) {
     create_cdb(argv[1], argv[2]);
     return 0;
 }
-
