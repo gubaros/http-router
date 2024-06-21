@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+void test(void);
 void create_cdb(const char *filename, const char *routes_file) {
     struct cdb_make cdbm;
     int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
